@@ -1,5 +1,27 @@
 import Cart from "../model/CartSchema.js";
 
+
+export const getallcart = async (req,res)=>{
+  try {
+    const allcartitems = await Cart.find({});
+    if(!allcartitems){
+      res.status(400).json({
+        message:'something get erro please try again'
+      })
+      return;
+    }
+    res.status(200).json({
+      message:'all your cart',
+      cartitems:allcartitems
+    })
+  } catch (error) {
+    res.status(500).json({
+      message:'server error from the cart',
+      error:error.message
+    })
+  }
+}
+
 //this is i think invalid function not realistic use for user
 export const getcartbyid = async (req, res) => {
   try {
@@ -10,7 +32,8 @@ export const getcartbyid = async (req, res) => {
       });
       return;
     }
-    const cart = await Cart.find({ userid: id });
+    const cart = await Cart.find({ userid: id }) .populate('userid', 'name email') // populate user, include only name and email
+      .populate('productid');           // populate product, include all fields by default
     if (!cart) {
       res.status(401).json({
         message: "cart is empty now add items",
@@ -66,7 +89,7 @@ export const addtocart = async (req, res) => {
 
 export const removecart = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params || req.body;
     if (!id) {
       res.status(401).json({
         message: "something went wrong try again",

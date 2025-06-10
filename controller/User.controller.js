@@ -78,13 +78,15 @@ export const adduser = async (req, res) => {
       name,
       email,
       phoneNo,
-      password,
+      password:hashPassword,
     };
     const saveuser = await User.create(user);
     // saveuser.password='';
     res.status(200).json({
       message: "user created successfully",
-      user: saveuser,
+      user: {
+        name,email,phoneNo
+      },
     });
   } catch (error) {
     res.status(501).json({
@@ -118,7 +120,7 @@ export const updateUser = async (req, res) => {
 
     res.status(200).json({
       message: "user updated successfully",
-      updatedUser: user,
+      user
     });
   } catch (error) {
     res.status(501).json({
@@ -154,3 +156,47 @@ export const deleteUser = async(req, res) => {
     });
   }
 };
+
+//login user
+
+export const login = async (req,res)=>{
+  try {
+    const {email,password} = req.body;
+    if(!email || !password){
+      res.status(400).json({
+        message:'invalid fields'
+      })
+      return;
+    }
+    console.log(email,password)
+    const user = await User.findOne({email:email});
+    console.log("user is",user)
+    if(!user){
+      res.status(400).json({
+        message:'user not exist register first'
+      })
+      return;
+    }
+    const verifypassword = await bcrypt.compare(password,user.password);
+    if(!verifypassword){
+      res.status(400).json({
+        message:'invalid user please try again'
+      })
+      return;
+    }
+    res.status(200).json({
+      message:'login successfully',
+      user:{
+         id:user._id,
+        name:user.name,
+        email:user.email,
+        phoneNo:user.phoneNo
+      }
+    })
+  } catch (error) {
+    res.status(500).json({
+      message:'something got wrong in login',
+      error:error.message
+    })
+  }
+}
